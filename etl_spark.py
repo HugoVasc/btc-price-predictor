@@ -30,7 +30,7 @@ btc_spark_df = btc_spark_df \
 
 # Adicionar colunas de variação percentual
 btc_spark_df = btc_spark_df \
-    .withColumn("close_diff", expr("close / lag(close, 1) over (order by Date) - 1")) \
+    .withColumn("close_diff", expr("Close / lag(Close, 1) over (order by Date) - 1")) \
     .withColumn("m_avg_7_diff", expr("m_avg_7 / lag(m_avg_7, 1) over (order by Date) - 1")) \
     .withColumn("m_avg_25_diff", expr("m_avg_25 / lag(m_avg_25, 1) over (order by Date) - 1")) \
     .withColumn("m_avg_99_diff", expr("m_avg_99 / lag(m_avg_99, 1) over (order by Date) - 1"))
@@ -39,4 +39,4 @@ btc_spark_df = btc_spark_df \
 btc_spark_df = btc_spark_df.drop("Dividends", "Stock Splits").na.drop()
 
 # Salvar como parquet com particionamento por ano e mês
-btc_spark_df.write.mode("overwrite").partitionBy("year", "month").parquet("./btc_hist_partitioned.parquet")
+btc_spark_df.write.mode("overwrite").parquet("./btc_hist_partitioned.parquet")

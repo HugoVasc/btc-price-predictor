@@ -23,5 +23,3 @@ btc_hist.drop(columns=['Dividends', 'Stock Splits'], inplace=True)
 btc_hist.dropna(inplace=True)
 
 btc_hist.to_parquet('./btc_hist.parquet')
-
-
