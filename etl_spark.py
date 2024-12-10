@@ -8,15 +8,15 @@ spark = SparkSession.builder.appName("BTC-USD Analysis").getOrCreate()
 
 # GET BTC - USD OHLCV DATA
 btc = yf.Ticker('BTC-USD')
-btc_hist = btc.history(start='2022-01-01').reset_index()
+btc_hist = btc.history(start='2019-01-01').reset_index()
 
 # Converter para Spark DataFrame
 btc_spark_df = spark.createDataFrame(btc_hist)
 
 # Criar colunas de ano e mês para particionamento
-btc_spark_df = btc_spark_df \
-    .withColumn("year", year(col("Date"))) \
-    .withColumn("month", month(col("Date")))
+# btc_spark_df = btc_spark_df \
+#     .withColumn("year", year(col("Date"))) \
+#     .withColumn("month", month(col("Date")))
 
 # Calcular as médias móveis de 7, 25 e 99 dias
 window_7 = Window.orderBy("Date").rowsBetween(-6, 0)
@@ -36,7 +36,7 @@ btc_spark_df = btc_spark_df \
     .withColumn("m_avg_99_diff", expr("m_avg_99 / lag(m_avg_99, 1) over (order by Date) - 1"))
 
 # Remover colunas indesejadas e valores nulos
-btc_spark_df = btc_spark_df.drop("Dividends", "Stock Splits").na.drop()
+btc_spark_df = btc_spark_df.drop("Dividends", "Stock Splits", "Volume").na.drop()
 
 # Salvar como parquet com particionamento por ano e mês
 btc_spark_df.write.mode("overwrite").parquet("./btc_hist_partitioned.parquet")

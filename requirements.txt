@@ -1,0 +1,14 @@
+ipykernel
+matplotlib
+nbformat
+numpy
+pandas
+plotly
+pyarrow
+pyspark
+scikit-learn
+seaborn
+yfinance
+tensorflow
+gym
+gym[classic_control]
