@@ -13,9 +13,14 @@ class CryptoTradingEnv:
             max_lose_percent (float): Percentual máximo de perda permitido antes de encerrar.
         """
         # Configuração inicial
-        self.dataset = dataset.reset_index(drop=True)  # Reseta o índice do DataFrame
+        self.max_steps = 500
+        self.data = dataset.reset_index(drop=True)  # Reseta o índice do DataFrame
         self.initial_balance = initial_balance
         self.max_lose_percent = max_lose_percent
+
+        self.start = np.random.randint(0, (len(self.data)-1) - self.max_steps)
+        self.end = self.start + self.max_steps
+        self.dataset = self.data[self.start:self.end].reset_index(drop=True)
 
         # Variáveis do ambiente
         self.balance = initial_balance  # Saldo atual em dinheiro
@@ -23,6 +28,7 @@ class CryptoTradingEnv:
         self.current_step = 0           # Passo atual no dataset
         self.done = False               # Flag para indicar o fim do episódio
         self.starting_price = self.dataset.loc[0, 'Close']  # Preço inicial de referência
+        self.last_action = None         # Última ação executada
 
     def reset(self):
         """
@@ -31,6 +37,9 @@ class CryptoTradingEnv:
         Returns:
             dict: Estado inicial do ambiente.
         """
+        self.start = np.random.randint(0, (len(self.data)-1) - 500)
+        self.end = self.start + 500
+        self.dataset = self.data[self.start:self.end].reset_index(drop=True)
         self.balance = self.initial_balance
         self.crypto_balance = 0.0
         self.current_step = 0
@@ -64,16 +73,19 @@ class CryptoTradingEnv:
         current_price = self.dataset.loc[self.current_step, 'Close']
         profit = 0.0
 
-        if action == 0:  # Ação: Buy
+        if action == self.last_action:  # Ação: Hold
+            profit = self._hold(current_price)
+
+
+        elif action == 0:  # Ação: Buy
             profit = self._buy(current_price)
 
         elif action == 1:  # Ação: Sell
             profit = self._sell(current_price)
 
-        elif action == 2:  # Ação: Hold
-            profit = self._hold(current_price)
+        
         else:
-            raise ValueError(f"Ação inválida ({action}). Por favor, escolha entre 0 (buy), 1 (sell) ou 2 (hold).")
+            raise ValueError(f"Ação inválida ({action}). Por favor, escolha entre 0 (buy), 1 (sell) ou repita a última ação para hold.")
 
         # Incrementa para o próximo passo
         if self.current_step < len(self.dataset) - 1:
@@ -85,6 +97,7 @@ class CryptoTradingEnv:
         self.done = self._check_done()
 
         # Retorna o estado atual, lucro e flag de finalização
+        self.last_action = action
         return self._get_current_state(), profit, self.done
 
     def _buy(self, price: float): #  Action 0
@@ -139,5 +152,6 @@ class CryptoTradingEnv:
         """
         current_price = self.dataset.loc[self.current_step, 'Close']
         total_value = self.balance + (self.crypto_balance * current_price)
+        # return total_value <= 0
         loss_percent = 1 - (total_value / self.initial_balance)
         return loss_percent > self.max_lose_percent
