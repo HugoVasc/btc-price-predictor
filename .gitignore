@@ -163,3 +163,8 @@ cython_debug/
 
 # Extracted Data
 *.parquet
+
+# MLFlow
+
+mlruns/
+mlartifacts/
