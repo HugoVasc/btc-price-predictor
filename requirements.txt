@@ -9,7 +9,4 @@ scikit-learn
 seaborn
 yfinance
 tensorflow
-gym
-gym[classic_control]
 mlflow
-tensorrt
